@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "ifce-inventory",
+    "slug": "ifce-inventory",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "pwa": {
+        "name": "IFCE Inventário",
+        "shortName": "IFCE Inv",
+        "description": "Sistema de Inventário do IFCE",
+        "themeColor": "#006633",
+        "backgroundColor": "#ffffff",
+        "display": "standalone",
+        "orientation": "portrait"
+      }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-asset"
+    ]
+  }
+}
