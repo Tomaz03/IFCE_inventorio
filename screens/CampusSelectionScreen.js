@@ -4,6 +4,8 @@ import {
     ActivityIndicator, Alert, ScrollView, StatusBar
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { ChevronDown, MapPin, User, Mail, ChevronRight, Check } from 'lucide-react-native';
 import { Theme } from '../constants/Theme';
@@ -29,14 +31,32 @@ export default function CampusSelectionScreen({ navigation }) {
 
     useEffect(() => {
         const init = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    setUser(user);
+                } else {
+                    console.warn('CampusSelection: No user session found');
+                    // Fallback to avoid infinite loading if user is somehow null
+                    // but the screen is mounted (shouldn't happen with session check in App.js)
+                }
 
-            const saved = await SecureStore.getItemAsync(CAMPUS_KEY);
-            if (saved) {
-                setSelectedCampus(saved);
+                let saved = null;
+                if (Platform.OS === 'web') {
+                    saved = await AsyncStorage.getItem(CAMPUS_KEY);
+                } else {
+                    saved = await SecureStore.getItemAsync(CAMPUS_KEY);
+                }
+
+                if (saved) {
+                    setSelectedCampus(saved);
+                }
+            } catch (err) {
+                console.error('CampusSelection initialization error:', err);
+                Alert.alert('Erro de Configuração', 'Ocorreu um problema ao carregar suas preferências.');
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         init();
     }, []);
@@ -44,12 +64,18 @@ export default function CampusSelectionScreen({ navigation }) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await SecureStore.setItemAsync(CAMPUS_KEY, selectedCampus);
+            if (Platform.OS === 'web') {
+                await AsyncStorage.setItem(CAMPUS_KEY, selectedCampus);
+            } else {
+                await SecureStore.setItemAsync(CAMPUS_KEY, selectedCampus);
+            }
+
             navigation.replace('MainApp', {
                 screen: 'Meus Dados',
                 params: { campus: selectedCampus }
             });
         } catch (error) {
+            console.error('Error saving campus:', error);
             Alert.alert('Erro', 'Não foi possível salvar sua preferência.');
         } finally {
             setSaving(false);

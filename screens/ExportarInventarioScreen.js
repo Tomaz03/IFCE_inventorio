@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView
+    View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, ScrollView, Platform
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Theme } from '../constants/Theme';
@@ -49,17 +49,29 @@ export default function ExportarInventarioScreen({ navigation }) {
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Inventario");
-            const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
 
-            const uri = FileSystem.cacheDirectory + 'inventario_ifce.xlsx';
-            await FileSystem.writeAsStringAsync(uri, wbout, {
-                encoding: 'base64' // Use string literal to avoid undefined errors
-            });
+            if (Platform.OS === 'web') {
+                console.log('Platform is Web, using XLSX.writeFile');
+                try {
+                    XLSX.writeFile(wb, 'inventario_ifce.xlsx');
+                    console.log('XLSX.writeFile called successfully');
+                    Alert.alert('Sucesso', 'O download da planilha Excel deve ter começado.');
+                } catch (webError) {
+                    console.error('Error in XLSX.writeFile:', webError);
+                    throw new Error('Erro ao gerar arquivo no navegador: ' + webError.message);
+                }
+            } else {
+                const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+                const uri = FileSystem.cacheDirectory + 'inventario_ifce.xlsx';
+                await FileSystem.writeAsStringAsync(uri, wbout, {
+                    encoding: 'base64'
+                });
 
-            await Sharing.shareAsync(uri, {
-                mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                dialogTitle: 'Exportar Inventário Excel'
-            });
+                await Sharing.shareAsync(uri, {
+                    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    dialogTitle: 'Exportar Inventário Excel'
+                });
+            }
 
         } catch (error) {
             console.error(error);
@@ -89,15 +101,26 @@ export default function ExportarInventarioScreen({ navigation }) {
             const ws = XLSX.utils.json_to_sheet(exportData);
             const csv = XLSX.utils.sheet_to_csv(ws);
 
-            const uri = FileSystem.cacheDirectory + 'inventario_ifce.csv';
-            await FileSystem.writeAsStringAsync(uri, csv, {
-                encoding: 'utf8' // Use string literal to avoid undefined errors
-            });
+            if (Platform.OS === 'web') {
+                console.log('Platform is Web, using XLSX.writeFile for CSV');
+                try {
+                    XLSX.writeFile(wb, 'inventario_ifce.csv', { bookType: 'csv' });
+                    Alert.alert('Sucesso', 'O download do arquivo CSV deve ter começado.');
+                } catch (webError) {
+                    console.error('Error in XLSX.writeFile (CSV):', webError);
+                    throw new Error('Erro ao gerar CSV: ' + webError.message);
+                }
+            } else {
+                const uri = FileSystem.cacheDirectory + 'inventario_ifce.csv';
+                await FileSystem.writeAsStringAsync(uri, csv, {
+                    encoding: 'utf8'
+                });
 
-            await Sharing.shareAsync(uri, {
-                mimeType: 'text/csv',
-                dialogTitle: 'Exportar Inventário CSV'
-            });
+                await Sharing.shareAsync(uri, {
+                    mimeType: 'text/csv',
+                    dialogTitle: 'Exportar Inventário CSV'
+                });
+            }
 
         } catch (error) {
             console.error(error);
@@ -170,7 +193,15 @@ export default function ExportarInventarioScreen({ navigation }) {
             `;
 
             const { uri } = await Print.printToFileAsync({ html });
-            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+
+            if (Platform.OS === 'web') {
+                // printToFileAsync on web might not behave as expected for "downloading"
+                // but usually print() works better for web. 
+                // However, printToFileAsync on web often returns a blob URL or triggers a print dialog.
+                await Print.printAsync({ html });
+            } else {
+                await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            }
 
         } catch (error) {
             console.error(error);

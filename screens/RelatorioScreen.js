@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    ActivityIndicator, StatusBar, RefreshControl, Alert, TextInput
+    ActivityIndicator, StatusBar, RefreshControl, Alert, TextInput, Platform
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import {
@@ -298,7 +298,11 @@ export default function RelatorioScreen({ navigation }) {
         try {
             const html = getHTMLContent();
             const { uri } = await Print.printToFileAsync({ html, base64: false });
-            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            if (Platform.OS === 'web') {
+                await Print.printAsync({ html });
+            } else {
+                await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            }
         } catch (err) {
             console.error('Export error:', err);
             Alert.alert('Erro', 'Não foi possível exportar o PDF.');
@@ -311,9 +315,27 @@ export default function RelatorioScreen({ navigation }) {
         try {
             const html = getHTMLContent();
             const fileName = `Relatorio_Inventario_${REPORT_KEY}.html`;
-            const fileUri = `${FileSystem.documentDirectory}${fileName}`;
-            await FileSystem.writeAsStringAsync(fileUri, html);
-            await Sharing.shareAsync(fileUri, { UTI: 'public.html', mimeType: 'text/html' });
+
+            if (Platform.OS === 'web') {
+                console.log('Exporting HTML for Web...');
+                const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+                Alert.alert('Sucesso', 'Download do relatório HTML iniciado.');
+            } else {
+                const fileUri = `${FileSystem.documentDirectory}${fileName}`;
+                await FileSystem.writeAsStringAsync(fileUri, html);
+                await Sharing.shareAsync(fileUri, { UTI: 'public.html', mimeType: 'text/html' });
+            }
         } catch (err) {
             console.error('HTML Export error:', err);
             Alert.alert('Erro', 'Não foi possível exportar o arquivo HTML.');

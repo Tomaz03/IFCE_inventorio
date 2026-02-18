@@ -4,6 +4,7 @@ import {
     FlatList, RefreshControl, Alert, Platform
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import {
     User,
@@ -40,8 +41,17 @@ export default function MeusDadosScreen({ navigation }) {
 
     useEffect(() => {
         const loadCampus = async () => {
-            const saved = await SecureStore.getItemAsync(CAMPUS_KEY);
-            if (saved) setCampus(saved);
+            try {
+                let saved = null;
+                if (Platform.OS === 'web') {
+                    saved = await AsyncStorage.getItem(CAMPUS_KEY);
+                } else {
+                    saved = await SecureStore.getItemAsync(CAMPUS_KEY);
+                }
+                if (saved) setCampus(saved);
+            } catch (err) {
+                console.error('MeusDadosScreen loadCampus error:', err);
+            }
         };
         loadCampus();
         loadUserData();
