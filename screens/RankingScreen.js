@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, FlatList, TouchableOpacity,
-    ActivityIndicator, StatusBar, Alert
+    ActivityIndicator, StatusBar, Alert, Platform
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import {
     ArrowLeft,
     Trophy,
-    Medal,
     Download,
 } from 'lucide-react-native';
 import { Theme } from '../constants/Theme';
@@ -70,42 +69,73 @@ export default function RankingScreen({ navigation }) {
         }
         setExporting(true);
         try {
-            const rows = ranking.map((item, i) =>
-                `<tr>
-                    <td style="text-align:center;font-weight:bold;">${i + 1}º</td>
-                    <td>${item.name}</td>
-                    <td>${item.email}</td>
-                    <td style="text-align:center;font-weight:bold;">${item.count}</td>
-                </tr>`
-            ).join('');
+            const rows = ranking.map((item, i) => {
+                let medalEmoji = '';
+                let rowStyle = '';
+                if (i === 0) { medalEmoji = '🥇 '; rowStyle = 'background-color: #fffbeb;'; }
+                else if (i === 1) { medalEmoji = '🥈 '; rowStyle = 'background-color: #f8fafc;'; }
+                else if (i === 2) { medalEmoji = '🥉 '; rowStyle = 'background-color: #fff7ed;'; }
+
+                return `
+                <tr style="${rowStyle}">
+                    <td style="text-align:center; font-weight:bold; color: #000;">${medalEmoji}${i + 1}º</td>
+                    <td style="color: #000; font-weight: 600;">${item.name}</td>
+                    <td style="color: #111;">${item.email}</td>
+                    <td style="text-align:center; font-weight:bold; color: #064e3b; font-size: 14px;">${item.count}</td>
+                </tr>`;
+            }).join('');
 
             const html = `
             <html>
             <head><meta charset="utf-8"><style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h1 { color: #10b981; font-size: 22px; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
-                h3 { color: #666; font-size: 12px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-                th { background: #0f172a; color: #fff; padding: 10px 8px; text-align: left; font-size: 12px; }
-                td { padding: 8px; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-                tr:nth-child(even) { background: #f8fafc; }
-                tr:nth-child(1) td { background: #fffbeb; }
-                tr:nth-child(2) td { background: #f8fafc; }
-                tr:nth-child(3) td { background: #fff7ed; }
+                @media print { body { padding: 0; margin: 0; } }
+                body { font-family: 'Helvetica', Arial, sans-serif; padding: 40px; color: #000; background-color: #fff; }
+                .header { border-bottom: 4px solid #064e3b; padding-bottom: 15px; margin-bottom: 25px; text-align: center; }
+                h1 { color: #064e3b; font-size: 26px; margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
+                .meta { color: #000; font-size: 12px; font-weight: 500; margin-bottom: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+                th { background-color: #064e3b; color: #fff; padding: 12px 10px; text-align: left; font-size: 11px; text-transform: uppercase; border: 1px solid #064e3b; }
+                td { padding: 10px; border: 1px solid #bbb; font-size: 12px; color: #000; overflow-wrap: break-word; }
+                .footer { margin-top: 40px; font-size: 10px; text-align: center; color: #000; border-top: 1px solid #ccc; padding-top: 15px; }
+                .summary { margin-top: 20px; font-size: 13px; font-weight: bold; color: #064e3b; }
             </style></head>
             <body>
-                <h1>🏆 Ranking de Inventariantes</h1>
-                <h3>Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</h3>
+                <div class="header">
+                    <h1>🏆 Ranking de Inventariantes</h1>
+                    <div class="meta">Relatório de Desempenho - Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+                </div>
                 <table>
-                    <thead><tr><th>Pos.</th><th>Nome</th><th>E-mail</th><th>Itens</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%; text-align: center;">Posição</th>
+                            <th style="width: 40%;">Nome do Inventariante</th>
+                            <th style="width: 30%;">E-mail</th>
+                            <th style="width: 15%; text-align: center;">Itens Inv.</th>
+                        </tr>
+                    </thead>
                     <tbody>${rows}</tbody>
                 </table>
-                <p style="margin-top: 20px; font-size: 10px; color: #999;">Total de inventariantes: ${ranking.length}</p>
+                <div class="summary">Total de Colaboradores Participantes: ${ranking.length}</div>
+                <div class="footer">Documento Oficial Gerado pelo Sistema de Inventário IFCE</div>
             </body>
             </html>`;
 
-            const { uri } = await Print.printToFileAsync({ html, base64: false });
-            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            if (Platform.OS === 'web') {
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                } else {
+                    alert('Erro: Bloqueador de pop-ups impediu a geração do PDF.');
+                }
+            } else {
+                const { uri } = await Print.printToFileAsync({ html, base64: false });
+                await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            }
         } catch (err) {
             console.error('Export error:', err);
             Alert.alert('Erro', 'Não foi possível exportar o PDF.');
@@ -165,7 +195,7 @@ export default function RankingScreen({ navigation }) {
                 <Text style={styles.headerTitle}>Ranking</Text>
                 <View style={styles.headerRight}>
                     <TouchableOpacity onPress={exportPDF} style={styles.headerIconButton} disabled={exporting || loading}>
-                        <Download size={18} color={exporting ? Theme.colors.textSecondary : Theme.colors.primary} />
+                        {exporting ? <ActivityIndicator size="small" color={Theme.colors.primary} /> : <Download size={18} color={Theme.colors.primary} />}
                     </TouchableOpacity>
                 </View>
             </View>

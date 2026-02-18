@@ -4,11 +4,11 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Theme } from '../constants/Theme';
-import { ArrowLeft, FileSpreadsheet, FileText, Download, FileJson } from 'lucide-react-native';
+import { ArrowLeft, FileSpreadsheet, FileText, Download } from 'lucide-react-native';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
-import XLSX from 'xlsx';
+import * as FileSystem from 'expo-file-system';
+import * as XLSX from 'xlsx';
 
 export default function ExportarInventarioScreen({ navigation }) {
     const [loading, setLoading] = useState(false);
@@ -38,12 +38,22 @@ export default function ExportarInventarioScreen({ navigation }) {
                 return;
             }
 
-            // Flatten data for export
+            // Flatten data for export (mantendo os nomes originais das colunas)
             const exportData = data.map(item => ({
-                ...item,
-                usuario_nome: item.profiles?.full_name || '',
-                usuario_email: item.profiles?.email || '',
-                profiles: undefined // remove object
+                id: item.id,
+                tombo: item.tombo,
+                descricao_suap: item.descricao_suap,
+                descricao_nova: item.descricao_nova,
+                local_suap: item.sala_suap,
+                local_novo: item.sala_nova,
+                responsavel_suap: item.responsavel_suap,
+                responsavel_novo: item.responsavel_novo,
+                estado_conservacao: item.estado_conservacao_novo,
+                situacao_etiqueta: item.situacao_etiqueta,
+                campus: item.campus_inventariado,
+                data_inventario: item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : '',
+                inventariante_nome: item.profiles?.full_name || '',
+                inventariante_email: item.profiles?.email || ''
             }));
 
             const ws = XLSX.utils.json_to_sheet(exportData);
@@ -51,20 +61,32 @@ export default function ExportarInventarioScreen({ navigation }) {
             XLSX.utils.book_append_sheet(wb, ws, "Inventario");
 
             if (Platform.OS === 'web') {
-                console.log('Platform is Web, using XLSX.writeFile');
-                try {
-                    XLSX.writeFile(wb, 'inventario_ifce.xlsx');
-                    console.log('XLSX.writeFile called successfully');
-                    Alert.alert('Sucesso', 'O download da planilha Excel deve ter começado.');
-                } catch (webError) {
-                    console.error('Error in XLSX.writeFile:', webError);
-                    throw new Error('Erro ao gerar arquivo no navegador: ' + webError.message);
+                // Correção robusta para download no navegador
+                const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = window.URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'inventario_ifce.xlsx';
+                document.body.appendChild(a);
+                a.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+
+                // No Web, o Alert.alert do React Native pode falhar. Usando alert nativo.
+                if (typeof alert !== 'undefined') {
+                    alert('Sucesso: O download da planilha Excel foi iniciado.');
                 }
             } else {
+                // Mobile (iOS/Android)
                 const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
                 const uri = FileSystem.cacheDirectory + 'inventario_ifce.xlsx';
                 await FileSystem.writeAsStringAsync(uri, wbout, {
-                    encoding: 'base64'
+                    encoding: FileSystem.EncodingType.Base64
                 });
 
                 await Sharing.shareAsync(uri, {
@@ -74,10 +96,16 @@ export default function ExportarInventarioScreen({ navigation }) {
             }
 
         } catch (error) {
-            console.error(error);
-            Alert.alert('Erro', 'Falha ao exportar Excel: ' + error.message);
+            console.error('Erro na exportação Excel:', error);
+            const errorMsg = 'Falha ao exportar Excel: ' + error.message;
+            if (Platform.OS === 'web') {
+                alert(errorMsg);
+            } else {
+                Alert.alert('Erro', errorMsg);
+            }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     async function exportCSV() {
@@ -90,30 +118,39 @@ export default function ExportarInventarioScreen({ navigation }) {
                 return;
             }
 
-            // Flatten data
+            // Flatten data (mantendo nomes originais das colunas conforme código inicial)
             const exportData = data.map(item => ({
-                ...item,
-                usuario_nome: item.profiles?.full_name || '',
-                usuario_email: item.profiles?.email || '',
-                profiles: undefined
+                tombo: item.tombo,
+                descricao: item.descricao_nova || item.descricao_suap || '',
+                local: item.sala_nova || item.sala_suap || '',
+                responsavel: item.responsavel_novo || item.responsavel_suap || '',
+                estado: item.estado_conservacao_novo || '',
+                campus: item.campus_inventariado || '',
+                data: item.created_at ? new Date(item.created_at).toLocaleDateString('pt-BR') : '',
+                inventariante: item.profiles?.full_name || ''
             }));
 
             const ws = XLSX.utils.json_to_sheet(exportData);
             const csv = XLSX.utils.sheet_to_csv(ws);
 
             if (Platform.OS === 'web') {
-                console.log('Platform is Web, using XLSX.writeFile for CSV');
-                try {
-                    XLSX.writeFile(wb, 'inventario_ifce.csv', { bookType: 'csv' });
-                    Alert.alert('Sucesso', 'O download do arquivo CSV deve ter começado.');
-                } catch (webError) {
-                    console.error('Error in XLSX.writeFile (CSV):', webError);
-                    throw new Error('Erro ao gerar CSV: ' + webError.message);
-                }
+                // Adicionando BOM para compatibilidade de acentos no Excel Windows
+                const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'inventario_ifce.csv';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }, 100);
+                alert('Sucesso: O download do arquivo CSV foi iniciado.');
             } else {
                 const uri = FileSystem.cacheDirectory + 'inventario_ifce.csv';
                 await FileSystem.writeAsStringAsync(uri, csv, {
-                    encoding: 'utf8'
+                    encoding: FileSystem.EncodingType.UTF8
                 });
 
                 await Sharing.shareAsync(uri, {
@@ -123,10 +160,16 @@ export default function ExportarInventarioScreen({ navigation }) {
             }
 
         } catch (error) {
-            console.error(error);
-            Alert.alert('Erro', 'Falha ao exportar CSV: ' + error.message);
+            console.error('Erro na exportação CSV:', error);
+            const errorMsg = 'Falha ao exportar CSV: ' + error.message;
+            if (Platform.OS === 'web') {
+                alert(errorMsg);
+            } else {
+                Alert.alert('Erro', errorMsg);
+            }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     async function exportPDF() {
@@ -139,8 +182,7 @@ export default function ExportarInventarioScreen({ navigation }) {
                 return;
             }
 
-            // Create simplistic table rows (limiting columns for PDF width)
-            const rows = data.map((item, index) => {
+            const rows = data.map((item) => {
                 const user = item.profiles?.full_name || item.profiles?.email || 'N/A';
                 const date = new Date(item.created_at).toLocaleDateString('pt-BR');
                 return `
@@ -192,22 +234,24 @@ export default function ExportarInventarioScreen({ navigation }) {
                 </html>
             `;
 
-            const { uri } = await Print.printToFileAsync({ html });
-
             if (Platform.OS === 'web') {
-                // printToFileAsync on web might not behave as expected for "downloading"
-                // but usually print() works better for web. 
-                // However, printToFileAsync on web often returns a blob URL or triggers a print dialog.
                 await Print.printAsync({ html });
             } else {
+                const { uri } = await Print.printToFileAsync({ html });
                 await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
             }
 
         } catch (error) {
-            console.error(error);
-            Alert.alert('Erro', 'Falha ao exportar PDF: ' + error.message);
+            console.error('Erro na exportação PDF:', error);
+            const errorMsg = 'Falha ao exportar PDF: ' + error.message;
+            if (Platform.OS === 'web') {
+                alert(errorMsg);
+            } else {
+                Alert.alert('Erro', errorMsg);
+            }
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     }
 
     return (

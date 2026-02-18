@@ -10,7 +10,7 @@ import {
 import { Theme } from '../constants/Theme';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 
 const REPORT_KEY = 'relatorio_reitoria_2025';
 
@@ -184,27 +184,29 @@ export default function RelatorioScreen({ navigation }) {
     const getHTMLContent = () => {
         const htmlRow = (label, value) => `
             <tr>
-                <td style="padding: 10px; border: 1px solid #ddd; font-size: 11px;">${label}</td>
-                <td style="padding: 10px; border: 1px solid #ddd; font-size: 11px; font-weight: bold; text-align: right;">${value}</td>
+                <td style="padding: 10px; border: 1px solid #bbb; font-size: 11px; color: #000;">${label}</td>
+                <td style="padding: 10px; border: 1px solid #bbb; font-size: 11px; font-weight: bold; text-align: right; color: #000;">${value}</td>
             </tr>
         `;
 
-        const sectionHeaderHTML = (title) => `<tr><th colspan="2" style="background-color: #f1f8f5; color: #064e3b; text-align: left; padding: 10px; font-size: 11px; font-weight: bold; border: 1px solid #ddd;">${title}</th></tr>`;
+        const sectionHeaderHTML = (title) => `<tr><th colspan="2" style="background-color: #f1f8f5; color: #064e3b; text-align: left; padding: 10px; font-size: 11px; font-weight: bold; border: 1px solid #bbb;">${title}</th></tr>`;
 
         return `
         <html>
         <head><meta charset="utf-8"><style>
-            body { font-family: 'Helvetica', sans-serif; padding: 40px; color: #333; line-height: 1.6; }
-            .top-header { border-bottom: 2px solid #064e3b; padding-bottom: 15px; margin-bottom: 30px; }
-            h1 { color: #064e3b; font-size: 20px; text-align: center; margin-bottom: 5px; }
-            h2 { color: #555; font-size: 14px; text-align: center; margin-bottom: 0px; text-transform: uppercase; }
-            .section-title { font-size: 16px; color: #064e3b; margin-top: 30px; border-left: 5px solid #064e3b; padding-left: 12px; margin-bottom: 15px; font-weight: bold; }
-            p { font-size: 11px; white-space: pre-wrap; margin-bottom: 15px; text-align: justify; }
-            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-            th { background-color: #f1f8f5; font-weight: bold; color: #064e3b; text-transform: uppercase; padding: 10px; border: 1px solid #ddd; font-size: 10px; text-align: left; }
-            td { padding: 8px; border: 1px solid #ddd; font-size: 10px; }
-            .footer { margin-top: 60px; font-size: 9px; text-align: center; color: #999; border-top: 1px solid #eee; padding-top: 15px; }
-            .sub-section { font-size: 13px; font-weight: bold; color: #333; margin-top: 20px; margin-bottom: 10px; }
+            @media print { body { padding: 0; margin: 0; } }
+            body { font-family: 'Helvetica', Arial, sans-serif; padding: 40px; color: #000; line-height: 1.5; background: #fff; }
+            .top-header { border-bottom: 3px solid #064e3b; padding-bottom: 15px; margin-bottom: 30px; text-align: center; }
+            h1 { color: #064e3b; font-size: 22px; margin-bottom: 5px; font-weight: bold; }
+            h2 { color: #222; font-size: 15px; margin-bottom: 0px; text-transform: uppercase; font-weight: bold; }
+            .section-title { font-size: 16px; color: #064e3b; margin-top: 30px; border-left: 6px solid #064e3b; padding-left: 12px; margin-bottom: 15px; font-weight: bold; background-color: #f9f9f9; padding-top: 5px; padding-bottom: 5px; }
+            p { font-size: 12px; white-space: pre-wrap; margin-bottom: 15px; text-align: justify; color: #000; }
+            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+            th { background-color: #f1f8f5; font-weight: bold; color: #064e3b; text-transform: uppercase; padding: 10px; border: 1px solid #bbb; font-size: 10px; text-align: left; }
+            td { padding: 8px; border: 1px solid #bbb; font-size: 10px; color: #000; overflow-wrap: break-word; }
+            .footer { margin-top: 60px; font-size: 10px; text-align: center; color: #000; border-top: 1px solid #bbb; padding-top: 15px; }
+            .sub-section { font-size: 14px; font-weight: bold; color: #000; margin-top: 20px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 3px; }
+            .highlight { font-weight: bold; color: #064e3b; }
         </style></head>
         <body>
             <div class="top-header">
@@ -214,22 +216,22 @@ export default function RelatorioScreen({ navigation }) {
             
             <div class="section-title">1. Identificação da Comissão de Inventário</div>
             <table>
-                <thead><tr><th>Função</th><th>Nome Completo</th><th>SIA PE/Matrícula</th><th>E-mail</th></tr></thead>
+                <thead><tr><th style="width: 20%;">Função</th><th style="width: 35%;">Nome Completo</th><th style="width: 15%;">SIA PE</th><th style="width: 30%;">E-mail</th></tr></thead>
                 <tbody>
-                    ${comissao.map(m => `<tr><td>${m.funcao}</td><td>${m.nome}</td><td>${m.siape}</td><td>${m.email}</td></tr>`).join('')}
+                    ${comissao.map(m => `<tr><td>${m.funcao}</td><td class="highlight">${m.nome}</td><td>${m.siape}</td><td>${m.email}</td></tr>`).join('')}
                 </tbody>
             </table>
             <p>${portaria}</p>
             
             <div class="section-title">2. Período de realização do inventário</div>
-            <p>Início: ${periodo.inicio}\nTérmino: ${periodo.termino}\nPrazo total de execução: ${periodo.prazo}</p>
+            <p><span class="highlight">Início:</span> ${periodo.inicio} | <span class="highlight">Término:</span> ${periodo.termino}\n<span class="highlight">Prazo total de execução:</span> ${periodo.prazo}</p>
             
             <div class="section-title">3. Metodologia Adotada</div>
             <p>${metodologia}</p>
             
             <div class="section-title">4. Resultado geral do inventário</div>
             <table>
-                <thead><tr><th style="width: 75%;">Descrição do Indicador</th><th style="text-align: right;">Quantidade</th></tr></thead>
+                <thead><tr><th style="width: 75%;">Descrição do Indicador</th><th style="text-align: right; width: 25%;">Quantidade</th></tr></thead>
                 <tbody>
                     ${sectionHeaderHTML('Resumo Geral')}
                     ${htmlRow('Total de bens sob responsabilidade da unidade', stats.totalBens)}
@@ -258,9 +260,9 @@ export default function RelatorioScreen({ navigation }) {
 
             <div class="section-title">5. Compatibilidade contábil</div>
             <table>
-                <thead><tr><th>CONTA CONTÁBIL</th><th>STATUS</th><th style="text-align: right;">VALOR TOTAL</th></tr></thead>
+                <thead><tr><th style="width: 50%;">CONTA CONTÁBIL</th><th style="width: 25%;">STATUS</th><th style="text-align: right; width: 25%;">VALOR TOTAL</th></tr></thead>
                 <tbody>
-                    ${contabilidade.map(c => `<tr><td>${c.conta}</td><td>${c.status}</td><td style="text-align: right;">${c.valor}</td></tr>`).join('')}
+                    ${contabilidade.length > 0 ? contabilidade.map(c => `<tr><td>${c.conta}</td><td>${c.status}</td><td style="text-align: right; font-weight: bold;">${c.valor}</td></tr>`).join('') : '<tr><td colspan="3" style="text-align: center;">Nenhum dado contábil registrado</td></tr>'}
                 </tbody>
             </table>
             
@@ -273,9 +275,9 @@ export default function RelatorioScreen({ navigation }) {
 
             <div class="sub-section">6.3 Setores com Maior Incidência de Inconsistências</div>
             <table>
-                <thead><tr><th>Setor</th><th>Total de Bens</th><th>Principais Inconsistências</th></tr></thead>
+                <thead><tr><th style="width: 35%;">Setor</th><th style="width: 15%;">Total de Bens</th><th style="width: 50%;">Principais Inconsistências</th></tr></thead>
                 <tbody>
-                    ${setoresInconsistentes.map(s => `<tr><td>${s.setor}</td><td>${s.total}</td><td>${s.inconsistencias}</td></tr>`).join('')}
+                    ${setoresInconsistentes.map(s => `<tr><td class="highlight">${s.setor}</td><td>${s.total}</td><td>${s.inconsistencias}</td></tr>`).join('')}
                 </tbody>
             </table>
             
@@ -288,7 +290,7 @@ export default function RelatorioScreen({ navigation }) {
             <div class="section-title">9. Anexos Complementares</div>
             <p>${anexos}</p>
 
-            <div class="footer">Documento gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+            <div class="footer">Documento oficial gerado pelo Sistema de Inventário IFCE\nGerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
         </body>
         </html>`;
     };
@@ -297,10 +299,20 @@ export default function RelatorioScreen({ navigation }) {
         setExporting(true);
         try {
             const html = getHTMLContent();
-            const { uri } = await Print.printToFileAsync({ html, base64: false });
             if (Platform.OS === 'web') {
-                await Print.printAsync({ html });
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                } else {
+                    alert('Erro: Bloqueador de pop-ups impediu a geração do PDF.');
+                }
             } else {
+                const { uri } = await Print.printToFileAsync({ html, base64: false });
                 await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
             }
         } catch (err) {
@@ -317,11 +329,9 @@ export default function RelatorioScreen({ navigation }) {
             const fileName = `Relatorio_Inventario_${REPORT_KEY}.html`;
 
             if (Platform.OS === 'web') {
-                console.log('Exporting HTML for Web...');
                 const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                a.style.display = 'none';
                 a.href = url;
                 a.download = fileName;
                 document.body.appendChild(a);
@@ -330,7 +340,7 @@ export default function RelatorioScreen({ navigation }) {
                     document.body.removeChild(a);
                     window.URL.revokeObjectURL(url);
                 }, 100);
-                Alert.alert('Sucesso', 'Download do relatório HTML iniciado.');
+                alert('Sucesso: Download do relatório HTML iniciado.');
             } else {
                 const fileUri = `${FileSystem.documentDirectory}${fileName}`;
                 await FileSystem.writeAsStringAsync(fileUri, html);
@@ -367,6 +377,13 @@ export default function RelatorioScreen({ navigation }) {
         </View>
     );
 
+    const StatRow = ({ label, value, highlight, border = true }) => (
+        <View style={[styles.row, border && styles.borderBottom]}>
+            <Text style={styles.cellLabel}>{label}</Text>
+            <Text style={[styles.cellValue, highlight && { color: highlight }]}>{value}</Text>
+        </View>
+    );
+
     if (loading) {
         return (
             <View style={styles.centerContainer}>
@@ -381,18 +398,18 @@ export default function RelatorioScreen({ navigation }) {
             <StatusBar barStyle="light-content" />
 
             <View style={styles.appHeader}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconButton}>
-                    <ArrowLeft size={20} color="#fff" />
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+                    <ArrowLeft size={24} color="#fff" />
                 </TouchableOpacity>
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>Relatório do Inventário</Text>
-                    <Text style={styles.headerSubtitle}>GESTÃO DE DADOS E EXPORTAÇÃO</Text>
+                <View>
+                    <Text style={styles.appTitle}>Relatório Estruturado</Text>
+                    <Text style={styles.appSubtitle}>Exercício 2025/2026</Text>
                 </View>
-                <View style={{ flexDirection: 'row', gap: 10 }}>
-                    <TouchableOpacity onPress={exportHTML} style={[styles.headerIconButton, styles.codeButton]} disabled={exportingHTML}>
+                <View style={styles.headerActions}>
+                    <TouchableOpacity onPress={exportHTML} style={styles.headerIconBtn} disabled={exportingHTML}>
                         {exportingHTML ? <ActivityIndicator size="small" color="#fff" /> : <Code size={20} color="#fff" />}
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={exportPDF} style={[styles.headerIconButton, styles.exportButton]} disabled={exporting}>
+                    <TouchableOpacity onPress={exportPDF} style={styles.headerIconBtn} disabled={exporting}>
                         {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Download size={20} color="#fff" />}
                     </TouchableOpacity>
                 </View>
@@ -400,102 +417,93 @@ export default function RelatorioScreen({ navigation }) {
 
             <ScrollView
                 style={styles.content}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} tintColor={Theme.colors.primary} />}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); loadData(); }} />}
             >
+                <View style={styles.infoCard}>
+                    <View style={styles.infoIcon}>
+                        <AlertCircle size={20} color={Theme.colors.primary} />
+                    </View>
+                    <Text style={styles.infoText}>
+                        Este relatório consolida os dados coletados durante o inventário. Você pode editar cada seção antes de exportar o documento final.
+                    </Text>
+                </View>
+
                 {/* Tópico 1 */}
                 <View style={styles.card}>
                     <SectionHeader num="1" title="Comissão de Inventário" id="topico1" icon={UserCheck} />
 
                     {editingSection === 'topico1' ? (
                         <View>
-                            {comissao.map((m, idx) => (
-                                <View key={idx} style={styles.memberEditForm}>
-                                    <TextInput style={styles.input} value={m.nome} onChangeText={(val) => {
-                                        const newC = [...comissao]; newC[idx].nome = val; setComissao(newC);
-                                    }} placeholder="Nome Completo" placeholderTextColor="#555" />
+                            {comissao.map((m, i) => (
+                                <View key={i} style={styles.memberEditForm}>
+                                    <TextInput style={styles.input} value={m.funcao} onChangeText={v => { const n = [...comissao]; n[i].funcao = v; setComissao(n); }} placeholder="Função" />
+                                    <TextInput style={styles.input} value={m.nome} onChangeText={v => { const n = [...comissao]; n[i].nome = v; setComissao(n); }} placeholder="Nome" />
                                     <View style={styles.memberFormRow}>
-                                        <TextInput style={[styles.input, { flex: 0.5 }]} value={m.funcao} onChangeText={(val) => {
-                                            const newC = [...comissao]; newC[idx].funcao = val; setComissao(newC);
-                                        }} placeholder="Função" placeholderTextColor="#555" />
-                                        <TextInput style={[styles.input, { flex: 0.5 }]} value={m.siape} onChangeText={(val) => {
-                                            const newC = [...comissao]; newC[idx].siape = val; setComissao(newC);
-                                        }} placeholder="SIA PE" placeholderTextColor="#555" />
-                                    </View>
-                                    <View style={[styles.memberFormRow, { marginTop: 0 }]}>
-                                        <TextInput style={[styles.input, { flex: 1 }]} value={m.email} onChangeText={(val) => {
-                                            const newC = [...comissao]; newC[idx].email = val; setComissao(newC);
-                                        }} placeholder="E-mail Institucional" placeholderTextColor="#555" />
-                                        <TouchableOpacity onPress={() => setComissao(comissao.filter((_, i) => i !== idx))} style={styles.trashBtn}>
+                                        <TextInput style={[styles.input, { flex: 0.4 }]} value={m.siape} onChangeText={v => { const n = [...comissao]; n[i].siape = v; setComissao(n); }} placeholder="SIAPE" />
+                                        <TextInput style={[styles.input, { flex: 0.6 }]} value={m.email} onChangeText={v => { const n = [...comissao]; n[i].email = v; setComissao(n); }} placeholder="E-mail" />
+                                        <TouchableOpacity onPress={() => setComissao(comissao.filter((_, idx) => idx !== i))}>
                                             <Trash2 size={16} color={Theme.colors.error} />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
                             ))}
-                            <TouchableOpacity style={styles.addMemberBtn} onPress={() => setComissao([...comissao, { funcao: 'Membro', nome: '', siape: '', email: '' }])}>
+                            <TouchableOpacity style={styles.addMemberBtn} onPress={() => setComissao([...comissao, { funcao: '', nome: '', siape: '', email: '' }])}>
                                 <Plus size={16} color={Theme.colors.primary} />
                                 <Text style={styles.addMemberBtnText}>ADICIONAR MEMBRO</Text>
                             </TouchableOpacity>
-                            <Text style={styles.label}>Portaria de Designação</Text>
-                            <TextInput
-                                style={[styles.input, { minHeight: 60 }]}
-                                multiline
-                                value={portaria}
-                                onChangeText={setPortaria}
-                                placeholderTextColor="#555"
-                            />
                         </View>
                     ) : (
                         <View style={styles.previewTable}>
                             <View style={[styles.row, styles.tableHeader]}>
                                 <Text style={[styles.cell, styles.headerCell, { flex: 0.3 }]}>Função</Text>
-                                <Text style={[styles.cell, styles.headerCell, { flex: 0.7 }]}>Nome</Text>
+                                <Text style={[styles.cell, styles.headerCell, { flex: 0.7 }]}>Membro</Text>
                             </View>
                             {comissao.map((m, i) => (
                                 <View key={i} style={styles.row}>
                                     <Text style={[styles.cell, { flex: 0.3 }]}>{m.funcao}</Text>
-                                    <Text style={[styles.cell, { flex: 0.7 }]}>{m.nome}</Text>
+                                    <View style={{ flex: 0.7, padding: 8 }}>
+                                        <Text style={styles.memberName}>{m.nome}</Text>
+                                        <Text style={styles.memberInfo}>SIAPE: {m.siape} | {m.email}</Text>
+                                    </View>
                                 </View>
                             ))}
-                            <Text style={styles.portariaText}>{portaria}</Text>
                         </View>
+                    )}
+
+                    <Text style={styles.sublabel}>Portaria de Designação</Text>
+                    {editingSection === 'topico1' ? (
+                        <TextInput style={styles.input} multiline value={portaria} onChangeText={setPortaria} />
+                    ) : (
+                        <Text style={styles.reportText}>{portaria}</Text>
                     )}
                 </View>
 
                 {/* Tópico 2 */}
                 <View style={styles.card}>
                     <SectionHeader num="2" title="Período de Realização" id="topico2" icon={Calendar} />
+                    <View style={styles.row}>
+                        <View style={{ flex: 1, marginRight: 10 }}>
+                            <Text style={styles.sublabel}>Início</Text>
+                            {editingSection === 'topico2' ? (
+                                <TextInput style={styles.input} value={periodo.inicio} onChangeText={t => setPeriodo({ ...periodo, inicio: t })} />
+                            ) : (
+                                <Text style={styles.reportText}>{periodo.inicio}</Text>
+                            )}
+                        </View>
+                        <View style={{ flex: 1 }}>
+                            <Text style={styles.sublabel}>Término</Text>
+                            {editingSection === 'topico2' ? (
+                                <TextInput style={styles.input} value={periodo.termino} onChangeText={t => setPeriodo({ ...periodo, termino: t })} />
+                            ) : (
+                                <Text style={styles.reportText}>{periodo.termino}</Text>
+                            )}
+                        </View>
+                    </View>
+                    <Text style={[styles.sublabel, { marginTop: 10 }]}>Prazo de Execução</Text>
                     {editingSection === 'topico2' ? (
-                        <View style={styles.periodEditRow}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.labelMini}>INÍCIO</Text>
-                                <TextInput style={styles.input} value={periodo.inicio} onChangeText={v => setPeriodo({ ...periodo, inicio: v })} placeholder="dd/mm/aaaa" />
-                            </View>
-                            <View style={{ flex: 1, marginHorizontal: 10 }}>
-                                <Text style={styles.labelMini}>TÉRMINO</Text>
-                                <TextInput style={styles.input} value={periodo.termino} onChangeText={v => setPeriodo({ ...periodo, termino: v })} placeholder="dd/mm/aaaa" />
-                            </View>
-                            <View style={{ flex: 1 }}>
-                                <Text style={styles.labelMini}>PRAZO</Text>
-                                <TextInput style={styles.input} value={periodo.prazo} onChangeText={v => setPeriodo({ ...periodo, prazo: v })} placeholder="90 dias" />
-                            </View>
-                        </View>
+                        <TextInput style={styles.input} value={periodo.prazo} onChangeText={t => setPeriodo({ ...periodo, prazo: t })} />
                     ) : (
-                        <View style={styles.periodPreview}>
-                            <View style={styles.periodItem}>
-                                <Text style={styles.periodLabel}>INÍCIO</Text>
-                                <Text style={styles.periodVal}>{periodo.inicio}</Text>
-                            </View>
-                            <View style={styles.dividerV} />
-                            <View style={styles.periodItem}>
-                                <Text style={styles.periodLabel}>TÉRMINO</Text>
-                                <Text style={styles.periodVal}>{periodo.termino}</Text>
-                            </View>
-                            <View style={styles.dividerV} />
-                            <View style={styles.periodItem}>
-                                <Text style={styles.periodLabel}>PRAZO</Text>
-                                <Text style={styles.periodVal}>{periodo.prazo}</Text>
-                            </View>
-                        </View>
+                        <Text style={styles.reportText}>{periodo.prazo}</Text>
                     )}
                 </View>
 
@@ -672,7 +680,7 @@ export default function RelatorioScreen({ navigation }) {
                     </TouchableOpacity>
                     <TouchableOpacity style={[styles.pdfFullBtn, { flex: 0.6 }]} onPress={exportPDF} disabled={exporting}>
                         {exporting ? <ActivityIndicator size="small" color="#fff" /> : <Download size={20} color="#fff" />}
-                        <Text style={styles.pdfFullBtnText}>PDF PROFISSIONAL</Text>
+                        <Text style={styles.pdfFullBtnText}>EXPORTAR PDF</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -680,80 +688,66 @@ export default function RelatorioScreen({ navigation }) {
     );
 }
 
-function StatRow({ label, value, highlight, border = true }) {
-    return (
-        <View style={[styles.previewTableRow, border === false && { borderBottomWidth: 0 }]}>
-            <Text style={styles.tableRowLabel}>{label}</Text>
-            <Text style={[styles.tableRowValue, highlight ? { color: highlight } : { color: '#fff' }]}>{value}</Text>
-        </View>
-    );
-}
-
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: Theme.colors.background },
+    container: { flex: 1, backgroundColor: '#f8fafc' },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    loadingText: { marginTop: 10, color: '#64748b' },
     appHeader: {
-        height: 100, backgroundColor: Theme.colors.surface,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 20, paddingTop: 40, borderBottomWidth: 1, borderBottomColor: Theme.colors.border,
+        backgroundColor: Theme.colors.primary,
+        paddingTop: 50, paddingBottom: 20, paddingHorizontal: 20,
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
     },
-    headerIconButton: {
-        width: 40, height: 40, backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 12, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: Theme.colors.border,
+    backBtn: { marginRight: 15 },
+    appTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    appSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+    headerActions: { flexDirection: 'row' },
+    headerIconBtn: { marginLeft: 15, padding: 5 },
+    content: { flex: 1, padding: 15 },
+    infoCard: {
+        backgroundColor: '#f1f5f9', borderRadius: 12, padding: 15,
+        flexDirection: 'row', marginBottom: 20, borderLeftWidth: 4, borderLeftColor: Theme.colors.primary
     },
-    exportButton: { backgroundColor: 'rgba(16, 185, 129, 0.2)', borderColor: 'rgba(16, 185, 129, 0.3)' },
-    codeButton: { backgroundColor: 'rgba(75, 85, 99, 0.2)', borderColor: 'rgba(75, 85, 99, 0.3)' },
-    headerTitleContainer: { flex: 1, marginLeft: 10 },
-    headerTitle: { fontSize: 16, fontWeight: '900', color: '#fff', letterSpacing: 0.5, textTransform: 'uppercase' },
-    headerSubtitle: { fontSize: 10, color: Theme.colors.primary, fontWeight: '700', marginTop: 2 },
-    content: { flex: 1, padding: 16 },
+    infoIcon: { marginRight: 12, paddingTop: 2 },
+    infoText: { flex: 1, color: '#475569', fontSize: 13, lineHeight: 18 },
     card: {
-        backgroundColor: Theme.colors.surface, borderRadius: 20, padding: 18,
-        borderWidth: 1, borderColor: Theme.colors.border, marginBottom: 16,
+        backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 15,
+        borderWidth: 1, borderColor: '#e2e8f0',
+        shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 3, elevation: 2
     },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+    titleWithIcon: { flexDirection: 'row', alignItems: 'center' },
+    cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#1e293b', marginLeft: 8 },
+    liveIndicator: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12, borderWidth: 1, borderColor: '#e2e8f0' },
+    liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Theme.colors.primary, marginRight: 5 },
+    liveText: { fontSize: 9, fontWeight: 'bold', color: Theme.colors.primary },
     sectionHeaderWrap: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
-    sectionHeaderMain: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    sectionIconBox: { width: 34, height: 34, borderRadius: 10, backgroundColor: 'rgba(16, 185, 129, 0.1)', justifyContent: 'center', alignItems: 'center' },
-    sectionHeaderText: { fontSize: 15, fontWeight: '900', color: '#fff' },
-    miniEditBtn: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: 'rgba(16, 185, 129, 0.1)', flexDirection: 'row', alignItems: 'center', gap: 6 },
+    sectionHeaderMain: { flexDirection: 'row', alignItems: 'center' },
+    sectionIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: 'rgba(16, 185, 129, 0.1)', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+    sectionHeaderText: { fontSize: 15, fontWeight: 'bold', color: '#1e293b' },
+    miniEditBtn: { flexDirection: 'row', alignItems: 'center', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20, backgroundColor: '#f1f5f9' },
     miniSaveBtn: { backgroundColor: Theme.colors.primary },
-    miniEditBtnText: { fontSize: 10, fontWeight: '900', color: Theme.colors.primary },
-    reportText: { fontSize: 12, color: 'rgba(255,255,255,0.6)', lineHeight: 18, textAlign: 'justify' },
-    textArea: { backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 12, padding: 15, color: '#fff', fontSize: 13, minHeight: 120, textAlignVertical: 'top', borderWidth: 1, borderColor: Theme.colors.primary },
-    input: { backgroundColor: 'rgba(0,0,0,0.3)', borderRadius: 10, padding: 12, color: '#fff', fontSize: 12, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-    label: { fontSize: 11, fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: 6, marginTop: 10 },
-    labelMini: { fontSize: 9, fontWeight: '700', color: 'rgba(255,255,255,0.3)', marginBottom: 4 },
-    previewTable: { backgroundColor: 'rgba(0,0,0,0.2)', borderRadius: 12, overflow: 'hidden' },
-    row: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)', paddingVertical: 10, paddingHorizontal: 12 },
-    tableHeader: { backgroundColor: 'rgba(255,255,255,0.03)' },
-    cell: { color: 'rgba(255,255,255,0.6)', fontSize: 11 },
-    headerCell: { fontWeight: 'bold', color: Theme.colors.primary, textTransform: 'uppercase', fontSize: 9 },
-    portariaText: { fontSize: 11, fontStyle: 'italic', color: 'rgba(255,255,255,0.4)', padding: 12, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
-    memberEditForm: { padding: 12, backgroundColor: 'rgba(16, 185, 129, 0.05)', borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.1)' },
-    memberFormRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-    addMemberBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, padding: 10, borderStyle: 'dashed', borderWidth: 1, borderColor: 'rgba(16, 185, 129, 0.3)', borderRadius: 10, justifyContent: 'center', marginTop: 5 },
-    addMemberBtnText: { fontSize: 10, fontWeight: '900', color: Theme.colors.primary },
-    trashBtn: { padding: 8 },
-    periodEditRow: { flexDirection: 'row', justifyContent: 'space-between' },
-    periodPreview: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 },
-    periodItem: { flex: 1, alignItems: 'center' },
-    periodLabel: { fontSize: 9, fontWeight: '900', color: 'rgba(255,255,255,0.3)', marginBottom: 4 },
-    periodVal: { fontSize: 13, fontWeight: 'bold', color: Theme.colors.primary },
-    dividerV: { width: 1, height: '80%', backgroundColor: 'rgba(255,255,255,0.05)' },
-    cardHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 15 },
-    titleWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    cardTitle: { fontSize: 14, fontWeight: '900', color: '#fff' },
-    liveIndicator: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(16, 185, 129, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
-    liveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Theme.colors.primary },
-    liveText: { fontSize: 9, fontWeight: '900', color: Theme.colors.primary },
-    previewTableRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, paddingHorizontal: 15, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.03)' },
-    tableRowLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', flex: 0.8 },
-    tableRowValue: { fontSize: 13, fontWeight: '900' },
-    tableCategoryTitle: { fontSize: 10, fontWeight: '900', color: Theme.colors.primary, letterSpacing: 1 },
-    sublabel: { fontSize: 12, fontWeight: '800', color: Theme.colors.primary, marginBottom: 8 },
-    footerFloat: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: Theme.colors.background, borderTopWidth: 1, borderTopColor: Theme.colors.border },
-    footerActions: { flexDirection: 'row', gap: 12 },
-    pdfFullBtn: { backgroundColor: Theme.colors.primary, padding: 18, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, elevation: 10, shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 10 },
-    pdfFullBtnText: { color: '#fff', fontWeight: '900', fontSize: 12, letterSpacing: 0.2 },
-    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Theme.colors.background },
-    loadingText: { marginTop: 12, color: Theme.colors.textSecondary, fontSize: 14 },
+    miniEditBtnText: { fontSize: 10, fontWeight: 'bold', color: Theme.colors.primary, marginLeft: 4 },
+    sublabel: { fontSize: 12, fontWeight: 'bold', color: '#64748b', marginTop: 15, marginBottom: 5, textTransform: 'uppercase' },
+    reportText: { fontSize: 14, color: '#334155', lineHeight: 22 },
+    textArea: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 12, fontSize: 14, color: '#1e293b', backgroundColor: '#f8fafc', minHeight: 100, textAlignVertical: 'top' },
+    input: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 10, fontSize: 14, color: '#1e293b', backgroundColor: '#f8fafc', marginBottom: 8 },
+    previewTable: { borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, overflow: 'hidden', marginTop: 10 },
+    tableHeader: { backgroundColor: '#f8fafc', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    borderBottom: { borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    cell: { padding: 10, fontSize: 12, color: '#475569' },
+    headerCell: { fontWeight: 'bold', color: '#1e293b' },
+    cellLabel: { flex: 1, padding: 10, fontSize: 12, color: '#64748b' },
+    cellValue: { padding: 10, fontSize: 13, fontWeight: 'bold', color: '#1e293b', textAlign: 'right' },
+    tableCategoryTitle: { fontSize: 10, fontWeight: 'bold', color: Theme.colors.primary, padding: 6 },
+    memberName: { fontSize: 13, fontWeight: 'bold', color: '#1e293b' },
+    memberInfo: { fontSize: 11, color: '#64748b', marginTop: 2 },
+    memberEditForm: { padding: 10, backgroundColor: '#f8fafc', borderRadius: 8, marginBottom: 10, borderWidth: 1, borderColor: '#e2e8f0' },
+    memberFormRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    addMemberBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 10, marginTop: 5 },
+    addMemberBtnText: { fontSize: 11, fontWeight: 'bold', color: Theme.colors.primary, marginLeft: 6 },
+    footerFloat: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: 'rgba(255,255,255,0.9)' },
+    footerActions: { flexDirection: 'row', gap: 10 },
+    pdfFullBtn: { backgroundColor: Theme.colors.primary, height: 54, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 5 },
+    pdfFullBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 14, marginLeft: 10 }
 });

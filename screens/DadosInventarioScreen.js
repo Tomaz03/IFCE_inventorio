@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    ActivityIndicator, StatusBar, RefreshControl, Alert
+    ActivityIndicator, StatusBar, RefreshControl, Alert, Platform
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import {
@@ -124,42 +124,44 @@ export default function DadosInventarioScreen({ navigation }) {
     async function exportPDF() {
         setExporting(true);
         try {
-            const statRow = (label, value, color = '#0f172a') =>
-                `<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:12px;">${label}</td>
-                 <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:bold;text-align:right;color:${color};">${value}</td></tr>`;
+            const statRow = (label, value, color = '#000') =>
+                `<tr><td style="padding:10px 12px;border:1px solid #bbb;font-size:12px;color:#000;">${label}</td>
+                 <td style="padding:10px 12px;border:1px solid #bbb;font-size:14px;font-weight:bold;text-align:right;color:${color};">${value}</td></tr>`;
 
             const html = `
             <html>
             <head><meta charset="utf-8"><style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                h1 { color: #6366f1; font-size: 22px; border-bottom: 2px solid #6366f1; padding-bottom: 10px; }
-                h2 { color: #334155; font-size: 16px; margin-top: 24px; margin-bottom: 8px; }
-                h3 { color: #666; font-size: 12px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-                .summary { display: flex; gap: 16px; margin-bottom: 20px; }
-                .summary-box { flex: 1; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; text-align: center; }
-                .summary-label { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-                .summary-value { font-size: 28px; font-weight: 900; margin-top: 4px; }
+                @media print { body { padding: 0; margin: 0; } }
+                body { font-family: 'Helvetica', Arial, sans-serif; padding: 40px; color: #000; background-color: #fff; line-height: 1.5; }
+                .header { border-bottom: 4px solid #064e3b; padding-bottom: 15px; margin-bottom: 25px; text-align: center; }
+                h1 { color: #064e3b; font-size: 24px; margin-bottom: 5px; text-transform: uppercase; font-weight: bold; }
+                .meta { color: #000; font-size: 12px; font-weight: 500; margin-bottom: 20px; }
+                h2 { color: #064e3b; font-size: 16px; margin-top: 25px; margin-bottom: 10px; border-left: 5px solid #064e3b; padding-left: 10px; background-color: #f1f8f5; padding-top: 5px; padding-bottom: 5px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+                td { overflow-wrap: break-word; }
+                .footer { margin-top: 40px; font-size: 10px; text-align: center; color: #000; border-top: 1px solid #ccc; padding-top: 15px; }
             </style></head>
             <body>
-                <h1>📊 Dados do Inventário</h1>
-                <h3>Relatório gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</h3>
+                <div class="header">
+                    <h1>📊 Estatísticas do Inventário</h1>
+                    <div class="meta">Relatório Analítico - Gerado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}</div>
+                </div>
 
                 <h2>📦 Resumo Geral</h2>
                 <table>
-                    ${statRow('Total de bens sob responsabilidade da unidade', stats.totalBens?.toLocaleString(), '#6366f1')}
-                    ${statRow('Bens localizados e conferidos (inventariados)', stats.totalInventariados?.toLocaleString(), '#10b981')}
+                    ${statRow('Total de bens sob responsabilidade da unidade', stats.totalBens?.toLocaleString(), '#000')}
+                    ${statRow('Bens localizados e conferidos (inventariados)', stats.totalInventariados?.toLocaleString(), '#064e3b')}
                     ${statRow('Bens não localizados (não inventariados)', stats.naoLocalizados?.toLocaleString(), '#ef4444')}
                 </table>
 
-                <h2>⚠️ Divergências</h2>
+                <h2>⚠️ Divergências Identificadas</h2>
                 <table>
-                    ${statRow('Divergência de setor (sala)', stats.divSetor, '#f59e0b')}
-                    ${statRow('Divergência de responsável pela carga', stats.divResponsavel, '#f59e0b')}
-                    ${statRow('Divergência de número de série', stats.divNumeroSerie, '#f59e0b')}
-                    ${statRow('Divergência de descrição do bem', stats.divDescricao, '#f59e0b')}
-                    ${statRow('Divergência de estado de conservação', stats.divEstadoConservacao, '#f59e0b')}
-                    ${statRow('Divergência campus inventariado vs carga contábil', stats.divCampus, '#f59e0b')}
+                    ${statRow('Divergência de setor (sala)', stats.divSetor, '#000')}
+                    ${statRow('Divergência de responsável pela carga', stats.divResponsavel, '#000')}
+                    ${statRow('Divergência de número de série', stats.divNumeroSerie, '#000')}
+                    ${statRow('Divergência de descrição do bem', stats.divDescricao, '#000')}
+                    ${statRow('Divergência de estado de conservação', stats.divEstadoConservacao, '#000')}
+                    ${statRow('Divergência campus inventariado vs carga contábil', stats.divCampus, '#000')}
                 </table>
 
                 <h2>🔧 Estado de Conservação</h2>
@@ -170,18 +172,32 @@ export default function DadosInventarioScreen({ navigation }) {
 
                 <h2>🏷️ Etiqueta Patrimonial</h2>
                 <table>
-                    ${statRow('Possui etiqueta de tombamento da instituição', stats.possuiEtiqueta, '#3b82f6')}
-                    ${statRow('Etiqueta rasurada, descolando ou fora do padrão', stats.etiquetaRasurada, '#3b82f6')}
-                    ${statRow('Etiqueta em local de difícil visualização', stats.etiquetaDificil, '#3b82f6')}
-                    ${statRow('Múltiplas numerações', stats.etiquetaMultipla, '#3b82f6')}
+                    ${statRow('Possui etiqueta de tombamento da instituição', stats.possuiEtiqueta, '#000')}
+                    ${statRow('Etiqueta rasurada, descolando ou fora do padrão', stats.etiquetaRasurada, '#000')}
+                    ${statRow('Etiqueta em local de difícil visualização', stats.etiquetaDificil, '#000')}
+                    ${statRow('Múltiplas numerações', stats.etiquetaMultipla, '#000')}
                 </table>
 
-                <p style="margin-top: 20px; font-size: 10px; color: #999;">IFCE - Sistema de Inventário Patrimonial</p>
+                <div class="footer">Documento Oficial Gerado pelo Sistema de Inventário Patrimonial IFCE</div>
             </body>
             </html>`;
 
-            const { uri } = await Print.printToFileAsync({ html, base64: false });
-            await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            if (Platform.OS === 'web') {
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                    printWindow.document.write(html);
+                    printWindow.document.close();
+                    setTimeout(() => {
+                        printWindow.focus();
+                        printWindow.print();
+                    }, 500);
+                } else {
+                    alert('Erro: Bloqueador de pop-ups impediu a geração do PDF.');
+                }
+            } else {
+                const { uri } = await Print.printToFileAsync({ html, base64: false });
+                await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf' });
+            }
         } catch (err) {
             console.error('Export error:', err);
             Alert.alert('Erro', 'Não foi possível exportar o PDF.');
@@ -214,7 +230,7 @@ export default function DadosInventarioScreen({ navigation }) {
                 <Text style={styles.headerTitle}>Dados do Inventário</Text>
                 <View style={styles.headerRight}>
                     <TouchableOpacity onPress={exportPDF} style={styles.headerIconButton} disabled={exporting || loading}>
-                        <Download size={18} color={exporting ? Theme.colors.textSecondary : '#6366f1'} />
+                        {exporting ? <ActivityIndicator size="small" color={Theme.colors.primary} /> : <Download size={18} color={Theme.colors.primary} />}
                     </TouchableOpacity>
                 </View>
             </View>
@@ -249,39 +265,48 @@ export default function DadosInventarioScreen({ navigation }) {
                             <Text style={styles.summaryLabel}>INVENTARIADOS</Text>
                             <Text style={[styles.summaryValue, { color: Theme.colors.primary }]}>{stats.totalInventariados?.toLocaleString()}</Text>
                         </View>
+
+                        <View style={[styles.summaryCard, { borderColor: 'rgba(239, 68, 68, 0.2)' }]}>
+                            <View style={[styles.summaryIconBox, { backgroundColor: 'rgba(239, 68, 68, 0.1)' }]}>
+                                <AlertCircle size={24} color="#ef4444" />
+                            </View>
+                            <Text style={styles.summaryLabel}>NÃO LOCALIZADOS</Text>
+                            <Text style={[styles.summaryValue, { color: '#ef4444' }]}>{stats.naoLocalizados?.toLocaleString()}</Text>
+                        </View>
                     </View>
 
-                    <StatCard icon={AlertCircle} label="Bens não localizados (não inventariados)" value={stats.naoLocalizados?.toLocaleString()} color={Theme.colors.error} bgColor="rgba(244, 63, 148, 0.1)" borderColor="rgba(244, 63, 148, 0.2)" />
-
-                    <View style={[styles.sectionTitleRow, { marginTop: 28 }]}>
+                    <View style={styles.sectionTitleRow}>
                         <View style={[styles.titleAccent, { backgroundColor: '#f59e0b' }]} />
-                        <Text style={styles.sectionTitle}>Divergências</Text>
+                        <Text style={styles.sectionTitle}>Divergências Identificadas</Text>
+                    </View>
+                    <View style={styles.statsGrid}>
+                        <StatCard icon={MapPin} label="Setor (Sala)" value={stats.divSetor} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
+                        <StatCard icon={UserCheck} label="Responsável" value={stats.divResponsavel} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
+                        <StatCard icon={Hash} label="Número de Série" value={stats.divNumeroSerie} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
+                        <StatCard icon={FileText} label="Descrição do Bem" value={stats.divDescricao} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
+                        <StatCard icon={AlertTriangle} label="Estado Conservação" value={stats.divEstadoConservacao} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
+                        <StatCard icon={Building2} label="Campus Físico/Contábil" value={stats.divCampus} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
                     </View>
 
-                    <StatCard icon={MapPin} label="Divergência de setor (sala)" value={stats.divSetor} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
-                    <StatCard icon={UserCheck} label="Divergência de responsável pela carga" value={stats.divResponsavel} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
-                    <StatCard icon={Hash} label="Divergência de número de série" value={stats.divNumeroSerie} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
-                    <StatCard icon={FileText} label="Divergência de descrição do bem" value={stats.divDescricao} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
-                    <StatCard icon={Wrench} label="Divergência de estado de conservação" value={stats.divEstadoConservacao} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
-                    <StatCard icon={Building2} label="Divergência campus inventariado vs carga contábil" value={stats.divCampus} color="#f59e0b" bgColor="rgba(245, 158, 11, 0.1)" borderColor="rgba(245, 158, 11, 0.2)" />
-
-                    <View style={[styles.sectionTitleRow, { marginTop: 28 }]}>
-                        <View style={[styles.titleAccent, { backgroundColor: Theme.colors.error }]} />
+                    <View style={styles.sectionTitleRow}>
+                        <View style={[styles.titleAccent, { backgroundColor: '#ef4444' }]} />
                         <Text style={styles.sectionTitle}>Estado de Conservação</Text>
                     </View>
+                    <View style={styles.statsGrid}>
+                        <StatCard icon={Ban} label="Irrecuperáveis" value={stats.irrecuperaveis} color="#ef4444" bgColor="rgba(239, 68, 68, 0.1)" borderColor="rgba(239, 68, 68, 0.2)" />
+                        <StatCard icon={Clock} label="Bens Ociosos" value={stats.ociosos} color="#ef4444" bgColor="rgba(239, 68, 68, 0.1)" borderColor="rgba(239, 68, 68, 0.2)" />
+                    </View>
 
-                    <StatCard icon={Ban} label="Bens irrecuperáveis / antieconômicos" value={stats.irrecuperaveis} color={Theme.colors.error} bgColor="rgba(244, 63, 148, 0.1)" borderColor="rgba(244, 63, 148, 0.2)" />
-                    <StatCard icon={Clock} label="Bens ociosos" value={stats.ociosos} color={Theme.colors.error} bgColor="rgba(244, 63, 148, 0.1)" borderColor="rgba(244, 63, 148, 0.2)" />
-
-                    <View style={[styles.sectionTitleRow, { marginTop: 28 }]}>
+                    <View style={styles.sectionTitleRow}>
                         <View style={[styles.titleAccent, { backgroundColor: '#3b82f6' }]} />
                         <Text style={styles.sectionTitle}>Etiqueta Patrimonial</Text>
                     </View>
-
-                    <StatCard icon={Sticker} label="Possui etiqueta de tombamento da instituição" value={stats.possuiEtiqueta} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
-                    <StatCard icon={AlertTriangle} label="Etiqueta rasurada, descolando ou fora do padrão" value={stats.etiquetaRasurada} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
-                    <StatCard icon={Eye} label="Etiqueta em local de difícil visualização" value={stats.etiquetaDificil} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
-                    <StatCard icon={Layers} label="Múltiplas numerações" value={stats.etiquetaMultipla} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
+                    <View style={styles.statsGrid}>
+                        <StatCard icon={Sticker} label="Possui Etiqueta" value={stats.possuiEtiqueta} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
+                        <StatCard icon={AlertTriangle} label="Rasurada/Fora Padrão" value={stats.etiquetaRasurada} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
+                        <StatCard icon={Eye} label="Difícil Visualização" value={stats.etiquetaDificil} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
+                        <StatCard icon={Layers} label="Múltiplas Numerações" value={stats.etiquetaMultipla} color="#3b82f6" bgColor="rgba(59, 130, 246, 0.1)" borderColor="rgba(59, 130, 246, 0.2)" />
+                    </View>
 
                     <View style={{ height: 40 }} />
                 </ScrollView>
@@ -293,38 +318,55 @@ export default function DadosInventarioScreen({ navigation }) {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: Theme.colors.background },
     header: {
-        height: 60, backgroundColor: Theme.colors.glass,
-        flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-        paddingHorizontal: 20, marginTop: 40,
-        borderBottomWidth: 1, borderBottomColor: Theme.colors.border,
+        height: 60,
+        backgroundColor: Theme.colors.glass,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        marginTop: 40,
+        borderBottomWidth: 1,
+        borderBottomColor: Theme.colors.border,
     },
     headerLeft: { width: 44 },
     headerRight: { width: 44, alignItems: 'flex-end' },
-    headerTitle: { fontSize: 18, fontWeight: 'bold', color: Theme.colors.text, flex: 1, textAlign: 'center' },
+    headerTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: Theme.colors.text,
+        flex: 1,
+        textAlign: 'center',
+    },
     headerIconButton: {
-        width: 36, height: 36, backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 10, justifyContent: 'center', alignItems: 'center',
-        borderWidth: 1, borderColor: Theme.colors.border,
+        width: 36,
+        height: 36,
+        backgroundColor: 'rgba(255,255,255,0.05)',
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: Theme.colors.border,
     },
     scrollContent: { padding: 20 },
-    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-    titleAccent: { width: 4, height: 20, backgroundColor: Theme.colors.primary, borderRadius: 2 },
+    sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 24, marginBottom: 16 },
+    titleAccent: { width: 4, height: 20, borderRadius: 2, backgroundColor: Theme.colors.primary },
     sectionTitle: { fontSize: 18, fontWeight: '900', color: '#fff' },
-    summaryGrid: { flexDirection: 'row', gap: 12, marginBottom: 12 },
+    summaryGrid: { gap: 12 },
     summaryCard: {
-        flex: 1, backgroundColor: Theme.colors.surface, borderRadius: 20,
-        padding: 20, borderWidth: 1, alignItems: 'center',
+        backgroundColor: Theme.colors.surface, borderRadius: 20, padding: 20,
+        flexDirection: 'column', alignItems: 'center', borderWidth: 1,
     },
     summaryIconBox: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-    summaryLabel: { fontSize: 9, fontWeight: '900', color: Theme.colors.textSecondary, letterSpacing: 1 },
-    summaryValue: { fontSize: 24, fontWeight: '900', marginTop: 4 },
+    summaryLabel: { fontSize: 11, fontWeight: '800', color: Theme.colors.textSecondary, letterSpacing: 1 },
+    summaryValue: { fontSize: 32, fontWeight: '900', marginTop: 4 },
+    statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
     statCard: {
-        backgroundColor: Theme.colors.surface, borderRadius: 16, padding: 16,
-        flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, marginBottom: 10,
+        backgroundColor: Theme.colors.surface, borderRadius: 16, padding: 12,
+        flexDirection: 'row', alignItems: 'center', gap: 12, width: '48.2%', borderWidth: 1,
     },
-    statIconBox: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-    statInfo: { flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-    statLabel: { fontSize: 12, fontWeight: '600', color: Theme.colors.textSecondary, flex: 1, marginRight: 12 },
-    statValue: { fontSize: 18, fontWeight: '900' },
+    statIconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+    statInfo: { flex: 1 },
+    statLabel: { fontSize: 10, fontWeight: '700', color: Theme.colors.textSecondary },
+    statValue: { fontSize: 16, fontWeight: '900', marginTop: 2 },
+    centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
