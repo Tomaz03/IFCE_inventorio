@@ -18,6 +18,7 @@ import GerenciarInventarioScreen from '../screens/GerenciarInventarioScreen';
 import RankingScreen from '../screens/RankingScreen';
 import DadosInventarioScreen from '../screens/DadosInventarioScreen';
 import ExportarInventarioScreen from '../screens/ExportarInventarioScreen';
+import RelatorioScreen from '../screens/RelatorioScreen';
 
 import {
     ClipboardList,
@@ -155,6 +156,11 @@ export default function AppNavigator() {
                 <Stack.Screen
                     name="ExportarInventario"
                     component={ExportarInventarioScreen}
+                    options={{ headerShown: false }}
+                />
+                <Stack.Screen
+                    name="Relatorio"
+                    component={RelatorioScreen}
                     options={{ headerShown: false }}
                 />
             </Stack.Navigator>
