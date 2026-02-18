@@ -8,7 +8,8 @@ import {
     Trophy,
     BarChart3,
     ChevronRight,
-    FileDown
+    FileDown,
+    FileText
 } from 'lucide-react-native';
 import { Theme } from '../constants/Theme';
 
@@ -50,6 +51,15 @@ export default function GerenciarInventarioScreen({ navigation }) {
             bgColor: 'rgba(139, 92, 246, 0.1)',
             borderColor: 'rgba(139, 92, 246, 0.2)',
             route: 'ExportarInventario',
+        },
+        {
+            title: 'Relatório',
+            subtitle: 'Visualizar e editar relatório de inventário',
+            icon: FileText,
+            color: '#ec4899',
+            bgColor: 'rgba(236, 72, 153, 0.1)',
+            borderColor: 'rgba(236, 72, 153, 0.2)',
+            route: 'Relatorio',
         },
     ];
 

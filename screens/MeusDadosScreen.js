@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, StyleSheet, ScrollView, TouchableOpacity,
-    FlatList, RefreshControl, Alert
+    FlatList, RefreshControl, Alert, Platform
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { supabase } from '../lib/supabase';
@@ -40,7 +40,7 @@ export default function MeusDadosScreen({ navigation }) {
 
     useEffect(() => {
         const loadCampus = async () => {
-            const saved = await AsyncStorage.getItem(CAMPUS_KEY);
+            const saved = await SecureStore.getItemAsync(CAMPUS_KEY);
             if (saved) setCampus(saved);
         };
         loadCampus();
@@ -142,10 +142,17 @@ export default function MeusDadosScreen({ navigation }) {
     }
 
     function handleLogout() {
-        Alert.alert('Sair', 'Deseja realmente sair?', [
-            { text: 'Cancelar', style: 'cancel' },
-            { text: 'Sair', onPress: () => supabase.auth.signOut(), style: 'destructive' },
-        ]);
+        const performLogout = () => supabase.auth.signOut();
+
+        if (Platform.OS === 'web') {
+            const confirmed = window.confirm('Deseja realmente sair?');
+            if (confirmed) performLogout();
+        } else {
+            Alert.alert('Sair', 'Deseja realmente sair?', [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Sair', onPress: performLogout, style: 'destructive' },
+            ]);
+        }
     }
 
     const email = user?.email || 'N/A';
@@ -304,7 +311,7 @@ export default function MeusDadosScreen({ navigation }) {
                                     <ChevronRight size={18} color={Theme.colors.border} />
                                 </View>
                                 <Text style={styles.benName} numberOfLines={1}>{item.descricao?.toUpperCase()}</Text>
-                                <Text style={styles.benSubtitle} numberOfLines={1}>Inventariado em: 2024</Text>
+                                <Text style={styles.benSubtitle} numberOfLines={1}>Inventariado em: 2026</Text>
                             </View>
                         </TouchableOpacity>
                     ))}

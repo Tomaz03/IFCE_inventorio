@@ -3,7 +3,7 @@ import {
     StyleSheet, Text, View, TouchableOpacity,
     ActivityIndicator, Alert, ScrollView, StatusBar
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { supabase } from '../lib/supabase';
 import { ChevronDown, MapPin, User, Mail, ChevronRight, Check } from 'lucide-react-native';
 import { Theme } from '../constants/Theme';
@@ -29,19 +29,14 @@ export default function CampusSelectionScreen({ navigation }) {
 
     useEffect(() => {
         const init = async () => {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                setUser(user);
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
 
-                const saved = await AsyncStorage.getItem(CAMPUS_KEY);
-                if (saved) {
-                    setSelectedCampus(saved);
-                }
-            } catch (error) {
-                console.error('Init error:', error);
-            } finally {
-                setLoading(false);
+            const saved = await SecureStore.getItemAsync(CAMPUS_KEY);
+            if (saved) {
+                setSelectedCampus(saved);
             }
+            setLoading(false);
         };
         init();
     }, []);
@@ -49,7 +44,7 @@ export default function CampusSelectionScreen({ navigation }) {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await AsyncStorage.setItem(CAMPUS_KEY, selectedCampus);
+            await SecureStore.setItemAsync(CAMPUS_KEY, selectedCampus);
             navigation.replace('MainApp', {
                 screen: 'Meus Dados',
                 params: { campus: selectedCampus }
